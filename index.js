@@ -105,13 +105,47 @@ function saveExecDelete(res, req, httpMethod, method) {
 
 app.get('/', cors(), (req, res) => {
 
-    saveExecDelete(res, req, 'GET', (pPool, callback) => { 
+    saveExecDelete(res, req, 'GET', (pool, callback) => { 
         callback(false, []) 
     })
 
 })
 
+app.get('/login', cors(), (req, res) => {
 
+    saveExecDelete(res, req, 'GET', (pool, callback) => { 
+
+        const user = req.query.user
+        const password = req.query.password
+
+        pool.request()
+          .input('name', sql.Char, user)
+          .input('password', sql.Char, password)
+          .query('select * from users where name = @name and password = @password')
+
+        .then(result => {
+
+            if (result.recordset.length) {
+
+                callback(false, result.recordset[0])
+
+            } else {
+
+                callback( { message: 'not found' } )
+
+            }
+
+        }).catch(err => {
+
+            callback( err.message )
+
+        })
+        
+    })
+
+})
+  
+  
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
 })
