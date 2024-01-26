@@ -32,8 +32,83 @@ app.use(bodyParser.raw({limit: '50mb'}))
 
 const port = conn.port
 
-app.get('/', (req, res) => {
-  res.send('Hello World!!!!!!!')
+function saveExecDelete(res, req, httpMethod, method) {
+    
+    sqlproc.saveIncomeData(req, httpMethod, (err, reqUid, pPool) => {
+
+        if (err) {
+            
+            return res.send( { success: false, error: err } )
+            
+        } else {
+            
+            sqlproc.saveRequestToId( reqUid, pPool, req.query, (error, reqUid, pPool) => {
+        
+                if (error) {
+                    
+                    res.json({ success: false, message: error.message })
+
+                } else {
+
+                    method(pPool, (error, result) => {
+
+                        if (error) {
+                            
+                            pPool.request()
+                            .input('id', reqUid)
+                            .input('error', true)
+                            .input('message', error.message)
+                            .query('update requests set error = @error, message = @message where id = @id')
+                            .then(() => {
+            
+                                res.json({ success: false, message: error.message })
+            
+                            })
+                            .catch((error) => {
+                                
+                                res.json({ success: false, message: error.message })
+                                
+                            })
+
+                        } else {
+
+                            sqlproc.deleteRequestAfterExecute(pPool, reqUid, error => {
+
+                                if (error) {
+                                    
+                                    res.json({ success: false, message: error.message })
+
+                                } else {
+
+                                    res.json({ success: true, result })
+
+                                }
+
+                            })
+
+                        }
+
+                    })
+
+                            
+                }
+
+            })
+
+        }
+
+    })
+
+
+}
+
+
+app.get('/', cors(), (req, res) => {
+
+    saveExecDelete(res, req, 'GET', (pPool, callback) => { 
+        callback(false, []) 
+    })
+
 })
 
 

@@ -25,6 +25,147 @@ function sqlreq(pool, params, query, callback) {
 
 }
 
+function getConstantValue(pPool, constantName, callback) {
+
+    const sqlText = 'select * from constants where name = @name'
+    const sqlParams = [{ name: 'name', type: sql.Char, value: constantName }]
+
+    sqlreq(pPool, sqlParams, sqlText, (err, result) => { 
+    
+        if (err) { callback(err) } else {
+
+            var arResult = result.recordset
+
+            if (arResult.length) {
+
+                callback(false, arResult[0].value) 
+                
+            } else {
+                
+                callback(false, undefined) 
+
+            }
+            
+        }
+
+    })
+    
+}
+
+function deleteRequest(pPool, reqUid, callback) {
+
+    const sqlText = 'delete from requests where id = @id'
+    const sqlParams = [{ name: 'id', type: sql.Char, value: reqUid }]
+
+    sqlreq(pPool, sqlParams, sqlText, (err, result) => { 
+    
+        if (err) { 
+            
+            callback(err) 
+        
+        } else {
+
+            callback(false) 
+            
+        }
+
+    })
+    
+}
+
+function deleteRequestAfterExecute(pPool, reqUid, callback) {
+
+    getConstantValue(pPool, 'delete_request_after_execute', (error, result) => {
+
+        if (error) {
+            
+            callback(error)
+
+        } else if(result == '1'){
+
+            deleteRequest(pPool, reqUid, error => {
+
+                if (error) {
+                    
+                    callback(error)
+
+                } else {
+
+                    callback(false)
+
+                }
+
+            })
+
+            
+        } else {
+
+            pPool.request()
+            .input('id', reqUid)
+            .input('executed', true)
+            .query('update requests set executed = @executed where id = @id')
+            .then(() => {
+
+                callback(false)
+
+            })
+            .catch((error) => {
+                
+                callback(error)
+                
+            })
+
+        }
+
+    })
+
+}
+
+function saveIncomeData(req, method, callback) {
+  
+    const reqUid = uuidv4()
+    var pPool = null
+
+    sql.connect(sqlconfig.config).then(pool => {
+
+        pPool = pool
+
+        const ip = req.header("x-forwarded-for")
+            || req.socket.remoteAddress
+
+        return pool.request()
+            .input('id', reqUid)
+            .input('date', datestr.dateToStr(new Date()))
+            .input('ip', ip )
+            .input('headers', JSON.stringify(req.rawHeaders))
+            .input('url', req.originalUrl)
+            .input('method', method)
+            .input('query', JSON.stringify(req.query))
+            .input('body', JSON.stringify(req.body))
+            .query('insert into income_data (id, date, ip, headers, url, method, query, body) values (@id, @date, @ip, @headers, @url, @method, @query, @body) ')
+          }).then(result => { callback(false, reqUid, pPool) })
+          .catch(err => { callback( err, reqUid, pPool ) })
+
+}
+
+function saveRequestToId(reqUid, pPool, data, callback) {
+  
+    pPool.request()
+        .input('id', reqUid)
+        .input('date', datestr.dateToStr(new Date()))
+        .input('data', JSON.stringify(data))
+        .input('executed', false)
+        .input('error', false)
+        .input('message', '')
+        .query('insert into requests (id, date, data, executed, error, message) values (@id, @date, @data, @executed, @error, @message) ')
+    .then(result => { callback(false, reqUid, pPool) })
+    .catch(err => { callback( err, reqUid, pPool ) })
+
+}
+
+
+
+
 function sqlTextInsert(tablename, params) {
 
     var res = []
@@ -518,7 +659,13 @@ function insertRecord(pPool, params, callback) {
 export default {
 
     saveRequest,
+    deleteRequestAfterExecute,
     sqlreq,
+
+    saveIncomeData,
+    saveRequestToId,
+
+    getConstantValue,
 
     sqlTextInsert,
 
