@@ -111,12 +111,12 @@ app.get('/', cors(), (req, res) => {
 
 })
 
-app.get('/login', cors(), (req, res) => {
+app.post('/login', cors(), (req, res) => {
 
-    saveExecDelete(res, req, 'GET', (pool, callback) => { 
+    const user = req.body.user
+    const password = req.body.password
 
-        const user = req.query.user
-        const password = req.query.password
+    saveExecDelete(res, req, 'POST', (pool, callback) => { 
 
         pool.request()
           .input('name', sql.Char, user)
@@ -144,6 +144,28 @@ app.get('/login', cors(), (req, res) => {
     })
 
 })
+
+app.post('/insertrecord', cors(), (req, res) => {
+
+    saveExecDelete(res, req, 'POST', (pool, callback) => { 
+
+        const params = req.body
+  
+        if (params.name == 'route_journal') {
+          params.record.ip =  req.header("x-forwarded-for") || req.socket.remoteAddress
+        }
+  
+        sqlproc.insertRecord(pool, params, err => {
+              
+           callback( err ) 
+  
+        })
+  
+  
+    })
+  
+  })
+  
   
   
 app.listen(port, () => {
