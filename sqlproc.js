@@ -135,8 +135,8 @@ function saveIncomeData(req, method, callback) {
 
         return pool.request()
             .input('id', reqUid)
-            .input('date', datestr.dateToStr(new Date()))
-            .input('ip', ip )
+            .input('date', datestr.dateToStrWM(new Date()))
+            .input('ip', ip.split(':')[0] )
             .input('headers', JSON.stringify(req.rawHeaders))
             .input('url', req.originalUrl)
             .input('method', method)

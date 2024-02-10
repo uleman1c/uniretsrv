@@ -18,11 +18,17 @@ function dateToStr(date) {
 
 }
 
+function dateToStrWM(date) {
+    
+    let ms = date.getMilliseconds()
 
+    return dateToStr(date) + (ms < 100 ? '0' : '') + (ms < 10 ? '0' : '') + String(ms)
+
+}
 
 
 export default {
 
-    dateToStr
+    dateToStr, dateToStrWM
 
 }
