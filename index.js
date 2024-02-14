@@ -231,6 +231,7 @@ app.post('/updaterecord', cors(), (req, res) => {
         var curFilter = bTable.filter || []
         var curAccessFilter = bTable.accessFilter
         var curOrder = bTable.order
+        var curGroup = bTable.group
         var curJoins = bTable.joins || []
         var curParams = bTable.params || []
   
@@ -355,6 +356,7 @@ app.post('/updaterecord', cors(), (req, res) => {
                 + (filterStr || searchStr ? ' where ' + (filterStr ? filterStr : '') 
                     + (filterStr && searchStr ? ' and ( ' : '') + (searchStr ? searchStr : '') : '') + (filterStr && searchStr ? ' ) ' : '')
             
+                + (curGroup ? ' group by ' + curGroup.join(', ') : '')
                 + (curOrder ? ' order by ' + curOrder.join(', ') : '')
   
         curParams.forEach(cp => { 
