@@ -4,7 +4,7 @@ import { Service } from 'node-windows'
 var svc = new Service({
   name:'node uniret',
   description: 'The node js uniret web server.',
-  script: 'E:\\Projects\\node\\uniretsrv\\index.js',
+  script: 'C:\\Users\\Mihail\\Projects\\uniretsrv\\index.js',
   nodeOptions: [
     '--harmony',
     '--max_old_space_size=4096'
