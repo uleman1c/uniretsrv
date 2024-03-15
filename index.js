@@ -284,9 +284,15 @@ app.post('/updaterecord', cors(), (req, res) => {
   
             } else {
                 
-                const fieldName = curTableName + '.' + field.name
+                let fieldName = curTableName + '.' + field.name
 
-                strFields.push(field.total ? field.total + '(' + fieldName + ') as ' + field.total + '_' + field.name : fieldName)
+                if (field.sql) {
+                    
+                    fieldName = field.sql
+
+                }
+
+                strFields.push(field.total ? field.total + '(' + fieldName + ') as ' + (field.as ? field.as : (field.total + '_' + field.name)) : fieldName + (field.as ? 'as ' + field.as : ''))
   
                 if (field.table) {
                     
