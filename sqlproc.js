@@ -656,6 +656,25 @@ function insertRecord(pPool, params, callback) {
 
 }
 
+function deleteRecord(pPool, params, callback) {
+
+    var request = pPool.request()
+
+    request.input(params.key, params.value)
+
+    request.query('delete from ' + params.name + ' where ' + params.key + ' = @' + params.key)
+        .then(result => {
+
+            callback()
+
+        }).catch(err => {
+
+            callback(err)
+
+        })
+
+}
+
 export default {
 
     saveRequest,
@@ -678,6 +697,8 @@ export default {
 
     insertRecords,
 
-    updateRecord, insertRecord, insertRecordWithTypes, insertTable, updateTable
+    updateRecord, insertRecord, insertRecordWithTypes, insertTable, updateTable,
+
+    deleteRecord
 
 }

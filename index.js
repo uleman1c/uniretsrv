@@ -166,6 +166,23 @@ app.post('/insertrecord', cors(), (req, res) => {
   
   })
   
+app.post('/deleterecord', cors(), (req, res) => {
+
+    saveExecDelete(res, req, 'POST', (pool, callback) => { 
+
+        const params = req.body
+  
+        sqlproc.deleteRecord(pool, params, err => {
+              
+           callback( err ) 
+  
+        })
+  
+  
+    })
+  
+  })
+  
 app.post('/updaterecord', cors(), (req, res) => {
 
     saveExecDelete(res, req, 'POST', (pool, callback) => { 
@@ -267,7 +284,9 @@ app.post('/updaterecord', cors(), (req, res) => {
   
             } else {
                 
-                strFields.push(curTableName + '.' + field.name)
+                const fieldName = curTableName + '.' + field.name
+
+                strFields.push(field.total ? field.total + '(' + fieldName + ') as ' + field.total + '_' + field.name : fieldName)
   
                 if (field.table) {
                     
