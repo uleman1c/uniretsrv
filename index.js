@@ -16,6 +16,9 @@ import datestr from './datestr.js'
 
 import fs from "fs"
 
+import exceljs from 'exceljs';
+
+
 const config = sqlconfig.config
 
 process.env.TZ = 'Europe/Moscow'
@@ -404,6 +407,8 @@ app.post('/updaterecord', cors(), (req, res) => {
   
   }
   
+  
+
     
   function writeToFile(file_exist, id, req, callback, callbackerror) {
 
@@ -443,6 +448,65 @@ app.post('/updaterecord', cors(), (req, res) => {
     }
   }
   
+  app.post('/excel', cors(), (req, res) => {
+
+    const params = req.body
+
+    const workbook = new exceljs.Workbook()
+    const worksheet = workbook.addWorksheet("Items")
+
+    let filespath = 'reports\\'
+    let filename = params.filename || uuidv4()
+
+    if (!params.fields) {
+        
+        res.json({ success: false, message: 'fields required' })
+
+    } else if (!params.items) {
+        
+        res.json({ success: false, message: 'items required' })
+
+    } else {
+        
+        let columns = [];
+        params.fields.forEach(element => {
+
+            columns.push({ header: element, key: element, width: 10 });
+
+        });
+
+        worksheet.columns = columns;
+
+        params.items.forEach(item => {
+
+            worksheet.addRow(item); // Add data in worksheet
+
+        });
+    
+        // Making first line in excel bold
+        worksheet.getRow(1).eachCell((cell) => {
+            cell.font = { bold: true };
+        });
+
+        try {
+            const data = workbook.xlsx.writeFile(filespath + filename + '.xlsx').then(() => {
+
+                    res.setHeader("Content-Type", "application/octet-stream")
+                    res.setHeader("Content-Disposition", "attachment; filename=" + filename + '.xlsx')
+
+                    res.download(filespath + filename + '.xlsx', filename + '.xlsx')
+
+                })
+
+        } catch (error) {
+
+            res.json({ success: false, message: error.message })
+
+        }
+
+    }
+  })
+
   app.post('/upload', cors(), (req, res) => {
   
     var id = ''
@@ -763,6 +827,9 @@ app.post('/updaterecord', cors(), (req, res) => {
       }
   })
     
+
+
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
 })
