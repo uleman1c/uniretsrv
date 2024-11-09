@@ -329,14 +329,7 @@ function sendToYLC(payData, res, req) {
                 callback(false, res)
             } else {
 
-                let jb = JSON.parse(res.body)
-
-                if (jb.details) {
-                    
-                    jb.message += jb.details
-                }
-
-                callback( { message: JSON.stringify(res) } )
+                 callback( { message: JSON.stringify(res) } )
             }
         })
 
