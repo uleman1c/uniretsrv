@@ -163,6 +163,7 @@ app.get('/yalc', cors(), (req, res) => {
     const idempotency_key = uuidv4()
 
     const payData = {
+        user_code: 'YNDXba650831c82e416d8a72f96ce25e3c3f',
         "idempotency_key": idempotency_key,
         "items": sellItems,
         "mcc": 5814,
@@ -309,8 +310,6 @@ function sendToYLC(payData, res, req) {
 
     const urlLCY = ylcSettings.url
 
-    payData.user_code = ylcSettings.user_code
-
     const options = {
         headers: {
             'Content-Type': 'application/json',
@@ -332,9 +331,12 @@ function sendToYLC(payData, res, req) {
 
                 let jb = JSON.parse(res.body)
 
-                jb.message += jb.details
+                if (jb.details) {
+                    
+                    jb.message += jb.details
+                }
 
-                callback(jb)
+                callback( { message: JSON.stringify(res) } )
             }
         })
 
