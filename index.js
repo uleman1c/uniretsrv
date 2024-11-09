@@ -18,11 +18,13 @@ import fs from "fs"
 
 import exceljs from 'exceljs';
 
+import request from 'request'
 
 const config = sqlconfig.config
 
 process.env.TZ = 'Europe/Moscow'
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 
 const app = express()
 
@@ -34,6 +36,35 @@ app.use(bodyParser.raw({limit: '50mb'}))
 
 
 const port = conn.port
+
+function reqGetJson(options, onResult)  {
+        console.log('rest::getJSON');
+        const port = options.port == 443 ? https : http;
+      
+        let output = '';
+      
+        const req = port.request(options, (res) => {
+          console.log(`${options.host} : ${res.statusCode}`);
+          res.setEncoding('utf8');
+      
+          res.on('data', (chunk) => {
+            output += chunk;
+          });
+      
+          res.on('end', () => {
+            let obj = JSON.parse(output);
+      
+            onResult(false, obj);
+          });
+        });
+      
+        req.on('error', (err) => {
+            onResult(err, err.message);
+        });
+      
+        req.end();
+
+}
 
 function saveExecDelete(res, req, httpMethod, method) {
     
@@ -113,6 +144,81 @@ app.get('/', cors(), (req, res) => {
     })
 
 })
+
+app.get('/yalc', cors(), (req, res) => {
+
+	const sellItems = [{
+
+			"price":    "1.00",
+			"quantity": "1.00",
+			"vat":      "nds_none", //"nds_20",
+			"title":    "element.product_id_str",
+			"tin":      "471803150441",
+	}]
+
+	const idempotency_key = uuidv4()
+
+	const payData = {
+		"user_code":       "YNDXba650831c82e416d8a72f96ce25e3c3f", // "YNDXf8278c15-131d-4185-8bca-308855fa4e92",  // resInputCode.accepted
+		"idempotency_key": idempotency_key,
+		"items":           sellItems,
+		"mcc":             5814,
+		"currency":        "RUB",
+	}
+
+	const urlLCY = "https://pay.eats-corp-orders.eda.tst.yandex.net/v1/payment/pay"
+
+	// client := &http.Client{CheckRedirect: redirectPolicyFunc}
+
+	// jsonResponse, _ := json.Marshal(payData)
+
+	// req, _ := http.NewRequest(
+	// 	"POST", urlLCY,
+	// 	bytes.NewBuffer(jsonResponse),
+	// )
+	// req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	// req.Header.Add("X-Authorization", "test_handmade:ae695e6971534c09b473865db87f3cd5")
+
+    const options = {
+        // host: 'pay.eats-corp-orders.eda.tst.yandex.net',
+        // port: 443,
+        // path: '/v1/payment/pay',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          "X-Authorization": "test_handmade:ae695e6971534c09b473865db87f3cd5"
+        },
+        body: JSON.stringify(payData)    
+    }
+
+    saveExecDelete(res, req, 'GET', (pool, callback) => { 
+
+        request.post(urlLCY,options,function(err,res,body){
+            if(err) {
+                callback(err)
+            } 
+            else if(res.statusCode === 200 ) {
+
+                callback(false, res)
+            } else {
+                callback(JSON.parse(res.body))
+            }
+          });
+
+        //   fetch(urlLCY, options, res => {
+
+        //     callback(false, res) 
+
+        //   }).catch(err => {
+            
+        //     callback(err) 
+        //   })
+
+
+    })
+
+})
+
 
 app.post('/login', cors(), (req, res) => {
 

@@ -1,5 +1,5 @@
 export default {
     user: 'sa',
     password: 'Ctljdf11ZAQ!2wsx',
-    server: '192.168.122.96'
+    server: '10.0.0.2'
 }
