@@ -1,0 +1,4 @@
+[yandex_lanch_card]
+user_code = "YNDXba650831c82e416d8a72f96ce25e3c3f"
+url = "https://pay.eats-corp-orders.eda.tst.yandex.net/v1/payment/pay"
+Authorization = "test_handmade:ae695e6971534c09b473865db87f3cd5"

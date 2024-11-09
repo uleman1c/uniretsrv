@@ -15,12 +15,16 @@ import conn from './connections.js'
 import datestr from './datestr.js'
 
 import fs from "fs"
-
+import toml from 'toml'
+import concat from'concat-stream'
+ 
 import exceljs from 'exceljs';
 
 import request from 'request'
 
 const config = sqlconfig.config
+
+let settings = {}
 
 process.env.TZ = 'Europe/Moscow'
 
@@ -147,6 +151,8 @@ app.get('/', cors(), (req, res) => {
 
 app.get('/yalc', cors(), (req, res) => {
 
+    const ylcSettings = settings.yandex_lanch_card
+
 	const sellItems = [{
 
 			"price":    "1.00",
@@ -159,34 +165,20 @@ app.get('/yalc', cors(), (req, res) => {
 	const idempotency_key = uuidv4()
 
 	const payData = {
-		"user_code":       "YNDXba650831c82e416d8a72f96ce25e3c3f", // "YNDXf8278c15-131d-4185-8bca-308855fa4e92",  // resInputCode.accepted
 		"idempotency_key": idempotency_key,
 		"items":           sellItems,
 		"mcc":             5814,
 		"currency":        "RUB",
 	}
 
-	const urlLCY = "https://pay.eats-corp-orders.eda.tst.yandex.net/v1/payment/pay"
-
-	// client := &http.Client{CheckRedirect: redirectPolicyFunc}
-
-	// jsonResponse, _ := json.Marshal(payData)
-
-	// req, _ := http.NewRequest(
-	// 	"POST", urlLCY,
-	// 	bytes.NewBuffer(jsonResponse),
-	// )
-	// req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	// req.Header.Add("X-Authorization", "test_handmade:ae695e6971534c09b473865db87f3cd5")
+	const urlLCY = ylcSettings.url 
+    
+    payData.user_code = ylcSettings.user_code
 
     const options = {
-        // host: 'pay.eats-corp-orders.eda.tst.yandex.net',
-        // port: 443,
-        // path: '/v1/payment/pay',
-        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          "X-Authorization": "test_handmade:ae695e6971534c09b473865db87f3cd5"
+          "X-Authorization": ylcSettings.Authorization 
         },
         body: JSON.stringify(payData)    
     }
@@ -201,19 +193,14 @@ app.get('/yalc', cors(), (req, res) => {
 
                 callback(false, res)
             } else {
-                callback(JSON.parse(res.body))
+
+                let jb = JSON.parse(res.body)
+
+                jb.message += jb.details
+
+                callback(jb)
             }
           });
-
-        //   fetch(urlLCY, options, res => {
-
-        //     callback(false, res) 
-
-        //   }).catch(err => {
-            
-        //     callback(err) 
-        //   })
-
 
     })
 
@@ -934,11 +921,17 @@ app.post('/updaterecord', cors(), (req, res) => {
   })
     
 
+fs.createReadStream('settings.toml', 'utf8').pipe(concat(function(data) {
+    
+    settings = toml.parse(data)
 
+    app.listen(port, () => {
+        console.log(`Listening on port ${port}`)
+    })
+    
 
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`)
-})
+}))
+
   
   
   
