@@ -1,3 +1,8 @@
 [yandex_lanch_card]
-url = "https://pay.eats-corp-orders.eda.tst.yandex.net/v1/payment/pay"
-Authorization = "test_handmade:ae695e6971534c09b473865db87f3cd5"
+url = "https://eda.yandex.ru/eats/v1/corp-orders/v1/payment/pay"
+Authorization = "handmade:f3cf644a0b15457998cdab59def60ed5"
+
+
+# test_handmade:ae695e6971534c09b473865db87f3cd5
+
+# https://pay.eats-corp-orders.eda.tst.yandex.net/v1/payment/pay
